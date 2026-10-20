@@ -3,7 +3,7 @@
   "displayName": "Baton",
   "description": "Route coding tasks from your VS Code sidebar.",
   "version": "0.0.1",
-  "publisher": "baton-dev",
+  "publisher": "ogroprojukti",
   "engines": {
     "vscode": "^1.85.0"
   },
@@ -27,12 +27,12 @@
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/FatinShadab/baton"
+    "url": "https://github.com/Ogro-Projukti/baton"
   },
   "bugs": {
-    "url": "https://github.com/FatinShadab/baton/issues"
+    "url": "https://github.com/Ogro-Projukti/baton/issues"
   },
-  "homepage": "https://github.com/FatinShadab/baton#readme",
+  "homepage": "https://github.com/Ogro-Projukti/baton#readme",
   "main": "./dist/extension.js",
   "activationEvents": [
     "onView:baton.sessions",
