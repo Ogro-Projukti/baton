@@ -14,6 +14,7 @@ import { validatePlanSummaryStructure } from '../src/plan-summary';
 import { getStepSummary, listSummaries, getPlanSummary } from '../src/mcp/data';
 import { TARGETS } from '../src/handoff';
 import { classifyPromptIntent, routeToUserAgent } from '../src/router/agent-router';
+import { clearPersonalKey, DEFAULT_KEYS, preferredKey, savePersonalKey } from '../src/secrets';
 import type { UserAgentConfig } from '../src/types';
 import { SessionRecordSchema, TaskRecordSchema, type SessionRecord, type TaskRecord } from '../src/types';
 import './panel-leak.test';
@@ -758,5 +759,82 @@ test('straight-line relay track: calculates proper segment distances, agent colo
   assert.equal(segments[1].agentColor, 'purple');
   assert.equal(segments[1].isFinalCrossing, true);
 });
+
+test('preferredKey returns default shipped keys, allows personal override, and reverts when cleared', async () => {
+  class MockSecretStorage {
+    private map = new Map<string, string>();
+    async get(key: string) { return this.map.get(key); }
+    async store(key: string, value: string) { this.map.set(key, value); }
+    async delete(key: string) { this.map.delete(key); }
+  }
+
+  const secrets = new MockSecretStorage() as any;
+  DEFAULT_KEYS.gemma = 'default-gemma-key';
+  DEFAULT_KEYS.ollama = 'default-ollama-key';
+  DEFAULT_KEYS.elevenlabs = 'default-eleven-key';
+
+  // 1. Without personal keys, returns default shipped keys
+  assert.equal(await preferredKey(secrets, 'gemma'), 'default-gemma-key');
+  assert.equal(await preferredKey(secrets, 'ollama'), 'default-ollama-key');
+  assert.equal(await preferredKey(secrets, 'elevenlabs'), 'default-eleven-key');
+
+  // 2. User sets personal key in Settings -> overrides default
+  await savePersonalKey(secrets, 'gemma', 'user-personal-key');
+  assert.equal(await preferredKey(secrets, 'gemma'), 'user-personal-key');
+  assert.equal(await preferredKey(secrets, 'ollama'), 'default-ollama-key');
+
+  // 3. User clears personal key -> reverts back to default
+  await clearPersonalKey(secrets, 'gemma');
+  assert.equal(await preferredKey(secrets, 'gemma'), 'default-gemma-key');
+});
+
+test('TaskRecordSchema and SessionRecordSchema accept long reasons without throwing', () => {
+  const longReason = 'The user wants to transition from a CLI to a modern UI. This requires architectural planning and UI/UX research before any implementation begins. (Fallback: No web agent in roster, using Codex CLI). Detailed multi-paragraph architectural rationale with extended context.';
+  assert.ok(longReason.length > 200);
+
+  const route = {
+    task_type: 'planning' as const,
+    risk_tier: 'low' as const,
+    recommended_destination: 'chatgpt_web' as const,
+    research_needed: false,
+    reason: longReason,
+  };
+  const task = {
+    id: 't-long-reason',
+    createdAt: new Date().toISOString(),
+    text: 'Do some long task',
+    route,
+    routerTier: 'gemma' as const,
+    decision: 'RUN',
+    status: 'routed' as const,
+  };
+  assert.doesNotThrow(() => TaskRecordSchema.parse(task));
+
+  const session = {
+    id: 's-long-reason',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    title: 'Test Session',
+    taskIds: ['t-long-reason'],
+    turns: [
+      {
+        id: 'turn-1',
+        role: 'user' as const,
+        content: 'hello',
+        createdAt: new Date().toISOString(),
+      },
+      {
+        id: 'turn-2',
+        role: 'assistant' as const,
+        content: longReason,
+        createdAt: new Date().toISOString(),
+        route,
+      },
+    ],
+  };
+  assert.doesNotThrow(() => SessionRecordSchema.parse(session));
+});
+
+
 
 

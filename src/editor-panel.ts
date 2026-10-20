@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { randomBytes, randomUUID } from 'node:crypto';
-import { clearPersonalKey, personalKeyStatus, savePersonalKey } from './secrets';
+import { clearPersonalKey, defaultKeyStatus, personalKeyStatus, savePersonalKey } from './secrets';
 import { JsonStore } from './store';
 import { configureRouter, routeTask } from './router';
 import { classify } from './router/rules';
@@ -468,7 +468,12 @@ export class BatonEditorPanel {
           notice = await clearPersonalKey(this.secrets, provider)
             ? `${provider === 'gemma' ? 'Google AI Studio' : provider === 'ollama' ? 'Ollama Cloud' : 'ElevenLabs'} key removed.` : 'Could not remove the key.';
         }
-        await this.postMessage({ type: 'personalKeysStatus', configured: await personalKeyStatus(this.secrets), notice });
+        await this.postMessage({
+          type: 'personalKeysStatus',
+          configured: await personalKeyStatus(this.secrets),
+          hasDefault: defaultKeyStatus(),
+          notice,
+        });
         return;
       }
 
@@ -771,7 +776,7 @@ export class BatonEditorPanel {
 
       const route: Route = {
         ...routerResult.route,
-        reason: agentDecision.reason,
+        reason: agentDecision.reason || routerResult.route.reason || 'Task routed successfully.',
       };
       if (agentDecision.recommendedModel) {
         route.recommended_model = agentDecision.recommendedModel;

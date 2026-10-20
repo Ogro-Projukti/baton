@@ -294,17 +294,21 @@
       }
     } else if (message.type === 'personalKeysStatus') {
       const configured = message.configured || {};
+      const hasDefault = message.hasDefault || {};
       if (gemmaKeyTag) {
-        gemmaKeyTag.textContent = configured.gemma ? 'Configured' : 'Not set';
+        gemmaKeyTag.textContent = configured.gemma ? 'Personal Key' : (hasDefault.gemma ? 'Default (Active)' : 'Not set');
         gemmaKeyTag.classList.toggle('configured', Boolean(configured.gemma));
+        gemmaKeyTag.classList.toggle('default-key', Boolean(!configured.gemma && hasDefault.gemma));
       }
       if (ollamaKeyTag) {
-        ollamaKeyTag.textContent = configured.ollama ? 'Configured' : 'Not set';
+        ollamaKeyTag.textContent = configured.ollama ? 'Personal Key' : (hasDefault.ollama ? 'Default (Active)' : 'Not set');
         ollamaKeyTag.classList.toggle('configured', Boolean(configured.ollama));
+        ollamaKeyTag.classList.toggle('default-key', Boolean(!configured.ollama && hasDefault.ollama));
       }
       if (elevenlabsKeyTag) {
-        elevenlabsKeyTag.textContent = configured.elevenlabs ? 'Configured' : 'Not set';
+        elevenlabsKeyTag.textContent = configured.elevenlabs ? 'Personal Key' : (hasDefault.elevenlabs ? 'Default (Active)' : 'Not set');
         elevenlabsKeyTag.classList.toggle('configured', Boolean(configured.elevenlabs));
+        elevenlabsKeyTag.classList.toggle('default-key', Boolean(!configured.elevenlabs && hasDefault.elevenlabs));
       }
       if (message.notice) {
         showNotice(message.notice);

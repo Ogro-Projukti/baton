@@ -665,6 +665,11 @@ body {
   color: #4ade80;
 }
 
+.key-tag.default-key {
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+}
+
 .key-input-row {
   display: flex;
   align-items: center;

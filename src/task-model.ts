@@ -8,7 +8,7 @@ export const TerminalStates = new Set<TaskState>(['done', 'abandoned']);
 
 export const TriageSchema = z.object({
   needs_planning: z.boolean(),
-  reason: z.string().min(1).max(300),
+  reason: z.string().min(1),
   complexity: z.enum(['low', 'med', 'high']),
   platform: z.enum(['chatgpt', 'gemini', 'claude']),
   attach_files: z.array(z.string()).max(20),

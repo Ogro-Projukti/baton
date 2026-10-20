@@ -175,7 +175,7 @@ export const RouteSchema = z.object({
   risk_tier: z.enum(['low', 'moderate', 'high']),
   recommended_destination: z.enum(['codex', 'antigravity', 'copilot', 'chatgpt_web', 'gemini_web']),
   research_needed: z.boolean(),
-  reason: z.string().max(200),
+  reason: z.string(),
   recommended_model: z.string().nullable().optional(),
   model_reasoning: z.enum(['low', 'medium', 'high', 'default']).nullable().optional(),
   kb_refs: z.array(z.string()).optional(),
@@ -183,7 +183,7 @@ export const RouteSchema = z.object({
   kb_unverified: z.boolean().optional(),
   kb_docs_verified: z.boolean().optional(),
   kb_note: z.string().nullable().optional(),
-  kb_claims: z.array(z.object({ text: z.string(), source_url: z.string().url(), origin: z.enum(['docs', 'manual', 'seed']) })).optional(),
+  kb_claims: z.array(z.object({ text: z.string(), source_url: z.string(), origin: z.enum(['docs', 'manual', 'seed']) })).optional(),
 });
 export type Route = z.infer<typeof RouteSchema>;
 
@@ -245,7 +245,7 @@ export const TaskRecordSchema = z.object({
   outcome: z.string().optional(),
   changedFiles: z.array(z.string()).optional(),
   workspaceUri: z.string().optional(),
-  contextSnippet: z.string().max(6000).optional(),
+  contextSnippet: z.string().optional(),
   recommended_model: z.string().nullable().optional(),
   model_reasoning: z.enum(['low', 'medium', 'high', 'default']).nullable().optional(),
   kb_refs: z.array(z.string()).optional(),
@@ -273,7 +273,7 @@ export const SessionTurnSchema = z.object({
   plan: z.string().optional(),
   status: z.enum(['routed', 'planned', 'running', 'done', 'blocked']).optional(),
   outcome: z.string().optional(),
-  contextSnippet: z.string().max(6000).optional(),
+  contextSnippet: z.string().optional(),
   why: z.string().optional(),
   overrode: z.boolean().optional(),
   recommended_model: z.string().nullable().optional(),

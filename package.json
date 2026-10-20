@@ -127,11 +127,12 @@
     "check": "tsc --noEmit",
     "test": "esbuild tests/task-flow.test.ts --bundle --platform=node --target=node18 --external:vscode --outfile=dist/task-flow.test.cjs && node --test dist/task-flow.test.cjs",
     "eval": "esbuild scripts/eval.ts --bundle --platform=node --target=node18 --outfile=dist/eval.cjs && node dist/eval.cjs",
-    "package": "npx --yes @vscode/vsce package --no-dependencies"
+    "package": "vsce package --no-dependencies"
   },
   "devDependencies": {
     "@types/node": "^18.19.0",
     "@types/vscode": "~1.85.0",
+    "@vscode/vsce": "^4.0.0",
     "esbuild": "^0.25.0",
     "typescript": "^5.7.0"
   },

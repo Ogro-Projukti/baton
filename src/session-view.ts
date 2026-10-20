@@ -3,7 +3,7 @@ import { randomBytes } from 'node:crypto';
 import { JsonStore } from './store';
 import { isSessionViewMessage, SessionRecord } from './types';
 import { currentProject, sameProject } from './project';
-import { clearPersonalKey, personalKeyStatus, savePersonalKey, setKeys } from './secrets';
+import { clearPersonalKey, defaultKeyStatus, personalKeyStatus, savePersonalKey, setKeys } from './secrets';
 import { configureRouter } from './router';
 import { getRouterSettings, RouterSettingsSchema } from './router/settings';
 import { copyMcpConfig } from './mcp/config';
@@ -125,29 +125,35 @@ export class SessionViewProvider implements vscode.WebviewViewProvider {
           await this.refresh();
         } else if (message.type === 'personalKeysStatus') {
           const configured = await personalKeyStatus(this.secrets);
-          await this.view?.webview.postMessage({ type: 'personalKeysStatus', configured });
+          const hasDefault = defaultKeyStatus();
+          await this.view?.webview.postMessage({ type: 'personalKeysStatus', configured, hasDefault });
         } else if (message.type === 'savePersonalKey') {
           const saved = await savePersonalKey(this.secrets, message.provider, message.value);
           const configured = await personalKeyStatus(this.secrets);
+          const hasDefault = defaultKeyStatus();
           const name = message.provider === 'gemma' ? 'Google AI Studio' : message.provider === 'ollama' ? 'Ollama Cloud' : 'ElevenLabs';
           await this.view?.webview.postMessage({
             type: 'personalKeysStatus',
             configured,
+            hasDefault,
             notice: saved ? `${name} key saved.` : `Could not save ${name} key.`,
           });
         } else if (message.type === 'clearPersonalKey') {
           const cleared = await clearPersonalKey(this.secrets, message.provider);
           const configured = await personalKeyStatus(this.secrets);
+          const hasDefault = defaultKeyStatus();
           const name = message.provider === 'gemma' ? 'Google AI Studio' : message.provider === 'ollama' ? 'Ollama Cloud' : 'ElevenLabs';
           await this.view?.webview.postMessage({
             type: 'personalKeysStatus',
             configured,
-            notice: cleared ? `${name} key removed.` : `Could not remove ${name} key.`,
+            hasDefault,
+            notice: cleared ? `${name} key removed. Reverted to default.` : `Could not remove ${name} key.`,
           });
         } else if (message.type === 'openVsCodeSetKeys') {
           await setKeys(this.secrets);
           const configured = await personalKeyStatus(this.secrets);
-          await this.view?.webview.postMessage({ type: 'personalKeysStatus', configured });
+          const hasDefault = defaultKeyStatus();
+          await this.view?.webview.postMessage({ type: 'personalKeysStatus', configured, hasDefault });
         } else if (message.type === 'routerSettingsStatus') {
           await this.view?.webview.postMessage({ type: 'routerSettingsStatus', settings: getRouterSettings() });
         } else if (message.type === 'saveRouterSettings') {

@@ -91,7 +91,7 @@ const ModelChoiceSchema = z.object({
   agent_id: z.string().min(1),
   model: z.string().min(1).nullable(),
   reasoning: z.enum(['low', 'medium', 'high', 'default']).nullable(),
-  reason: z.string().max(200),
+  reason: z.string(),
   claim_ids: z.array(z.string()).default([]),
 });
 type ModelChoice = z.infer<typeof ModelChoiceSchema>;

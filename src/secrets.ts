@@ -1,5 +1,17 @@
 import type * as vscode from 'vscode';
 
+declare const process: {
+  env: {
+    BATON_DEFAULT_GEMINI_KEY?: string;
+    BATON_DEFAULT_OLLAMA_KEY?: string;
+    BATON_DEFAULT_ELEVENLABS_KEY?: string;
+    GEMINI_API_KEY?: string;
+    OLLAMA_API_KEY?: string;
+    ELEVENLABS_API_KEY?: string;
+    [key: string]: string | undefined;
+  };
+};
+
 export const KEY_NAMES = ['GEMINI_API_KEY', 'OLLAMA_API_KEY', 'ELEVENLABS_API_KEY'] as const;
 export type KeyName = typeof KEY_NAMES[number];
 export const PERSONAL_KEYS = {
@@ -9,10 +21,33 @@ export const PERSONAL_KEYS = {
 } as const;
 export type PersonalProvider = keyof typeof PERSONAL_KEYS;
 
+export const DEFAULT_KEYS: Record<PersonalProvider, string | undefined> = {
+  gemma: (typeof process !== 'undefined' && (process.env?.BATON_DEFAULT_GEMINI_KEY || process.env?.GEMINI_API_KEY)) || undefined,
+  ollama: (typeof process !== 'undefined' && (process.env?.BATON_DEFAULT_OLLAMA_KEY || process.env?.OLLAMA_API_KEY)) || undefined,
+  elevenlabs: (typeof process !== 'undefined' && (process.env?.BATON_DEFAULT_ELEVENLABS_KEY || process.env?.ELEVENLABS_API_KEY)) || undefined,
+};
+
+export function hasDefaultKey(provider: PersonalProvider): boolean {
+  return Boolean(DEFAULT_KEYS[provider]?.trim());
+}
+
+export function defaultKeyStatus(): Record<PersonalProvider, boolean> {
+  return {
+    gemma: hasDefaultKey('gemma'),
+    ollama: hasDefaultKey('ollama'),
+    elevenlabs: hasDefaultKey('elevenlabs'),
+  };
+}
+
 export async function preferredKey(secrets: vscode.SecretStorage, provider: PersonalProvider): Promise<string | undefined> {
-  return (await getKey(secrets, PERSONAL_KEYS[provider]))
-    ?? getKey(secrets, provider === 'gemma' ? 'GEMINI_API_KEY'
-      : provider === 'ollama' ? 'OLLAMA_API_KEY' : 'ELEVENLABS_API_KEY');
+  const personal = await getKey(secrets, PERSONAL_KEYS[provider]);
+  if (personal) return personal;
+
+  const legacy = await getKey(secrets, provider === 'gemma' ? 'GEMINI_API_KEY'
+    : provider === 'ollama' ? 'OLLAMA_API_KEY' : 'ELEVENLABS_API_KEY');
+  if (legacy) return legacy;
+
+  return DEFAULT_KEYS[provider];
 }
 
 export async function personalKeyStatus(secrets: vscode.SecretStorage): Promise<Record<PersonalProvider, boolean>> {
